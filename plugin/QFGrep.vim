@@ -32,6 +32,7 @@ command! QFGrepVersion echo "QFGrep Version: " . s:version
 "mappings
 nnoremap <silent><unique> <Plug>QFGrepG :call QFGrep#grep_QuickFix(0)<cr>
 nnoremap <silent><unique> <Plug>QFGrepV :call QFGrep#grep_QuickFix(1)<cr>
+nnoremap <silent><unique> <Plug>QFGrepC :call QFGrep#grep_contents_QuickFix()<cr>
 nnoremap <silent><unique> <Plug>QFRestore :call QFGrep#restore_QuickFix()<cr>
 
 "autocommands 
@@ -39,6 +40,7 @@ function! <SID>FTautocmdBatch()
   command! -buffer -nargs=0 QFGrep     call QFGrep#grep_QuickFix(0)  "invert flag =0
   command! -buffer -nargs=0 QFGrepV    call QFGrep#grep_QuickFix(1)  "invert flag =1
   command! -buffer -nargs=0 QFRestore  call QFGrep#restore_QuickFix()
+  command! -buffer -nargs=0 QFGrepContents call QFGrep#grep_contents_QuickFix()
 
   command! -buffer -nargs=1 QFGrepPat  call QFGrep#grep_QuickFix_with_pattern("<args>",0)  "invert flag =0
   command! -buffer -nargs=1 QFGrepPatV call QFGrep#grep_QuickFix_with_pattern("<args>",1)  "invert flag =1
@@ -46,6 +48,9 @@ function! <SID>FTautocmdBatch()
   "create mapping
   if !hasmapto('<Plug>QFGrepG','n')
     nmap <buffer> <Leader>g <Plug>QFGrepG
+  endif
+  if !hasmapto('<Plug>QFGrepC','n')
+    nmap <buffer> <Leader>f <Plug>QFGrepC
   endif
   if !hasmapto('<Plug>QFGrepV','n')
     nmap <buffer> <Leader>v <Plug>QFGrepV

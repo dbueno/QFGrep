@@ -176,6 +176,27 @@ function! QFGrep#do_grep(pat, invert, cp)
   endtry
 endfunction
 
+function! QFGrep#do_contents_grep(pat, cp)
+  "do validation
+  if empty(a:pat)
+    call QFGrep#print_err_msg("Empty pattern is not allowed")
+    return
+  endif
+
+  " rg -0 doesn't work even though docs for systemlist imply NUL -> NL
+  " conversion?
+  " XXX restrict rg to files in qflist
+  let matches = systemlist('rg -l ' . shellescape(a:pat))
+  let line = getline(1, '$')
+  for i in reverse(range(len(line)))
+    if index(matches, bufname(a:cp[i].bufnr)) < 0
+      call remove(a:cp, i)
+    endif
+  endfor
+  call QFGrep#set_list(a:cp)
+  call QFGrep#print_HLInfo(len(a:cp) . ' entries in Grep Contents Filter result.')
+endfunction
+
 " grep_QuickFix(): grep QF, get pattern from userinput {{{2
 "if argument invert is 1, do invert match like grep -v
 function! QFGrep#grep_QuickFix(invert)
@@ -198,6 +219,28 @@ function! QFGrep#grep_QuickFix(invert)
   exec 'redraw' 
 
   call QFGrep#do_grep(pat, a:invert, cp)
+endfunction
+
+function! QFGrep#grep_contents_QuickFix()
+  if &buftype != 'quickfix'
+    call QFGrep#print_err_msg('commands work only in Quickfix/location-list buffer.')
+    return
+  endif
+  "get cp of QF
+  let cp = QFGrep#copy_QuickFix()
+  if empty(cp)
+    call QFGrep#print_err_msg('Quickfix/location-list window is empty. Nothing could be grep-ed. ')
+    return
+  endif
+  call inputsave()
+  echohl QFGPrompt
+  let pat = input( s:msgHead . 'Contents Pattern:')
+  echohl None
+  call inputrestore()
+  "clear the cmdline
+  exec 'redraw'
+
+  call QFGrep#do_contents_grep(pat, cp)
 endfunction
 
 "grep_QuickFix_with_pattern(): do grep on quickfix with pattern as argument{{{2
